@@ -1,0 +1,9 @@
+CloudAppEvents
+| where Timestamp > ago(5d)
+| where ActionType == "Update user."
+| where RawEventData.ResultStatus == "Success"
+| mv-expand Property = RawEventData.ModifiedProperties
+| where Property.Name == "AccountEnabled" and Property.NewValue has "false"
+| extend DisabledBy = tostring(RawEventData.InitiatedBy.user.userPrincipalName)
+| project Timestamp, AccountObjectId, AccountDisplayName, disabledAccount = RawEventData.ObjectId, UserAgent, DisabledBy
+| order by Timestamp desc
