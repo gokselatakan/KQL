@@ -1,0 +1,15 @@
+AADSignInEventsBeta
+| where Timestamp > ago(10d)
+| where IsManaged != 1
+| where IsCompliant != 1
+//Filtering only for medium and high risk sign-in
+| where RiskLevelDuringSignIn in (50, 100)
+| where ClientAppUsed == "Browser"
+| where isempty(DeviceTrustType)
+| where isnotempty(State) or isnotempty(Country) or isnotempty(City)
+| where isnotempty(IPAddress)
+| where isnotempty(AccountObjectId)
+| where isempty(DeviceName)
+| where isempty(AadDeviceId)
+| project Timestamp,IPAddress, AccountDisplayName,Country, City, Application, RiskLevelDuringSignIn
+| order by Timestamp desc
