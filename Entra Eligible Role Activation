@@ -1,0 +1,8 @@
+IdentityInfo
+| where Timestamp > ago(30d)
+| where AssignedRoles != ""
+| mv-expand AssignedRoles
+| extend EntraAdminRole = tostring(AssignedRoles)
+| project Timestamp, EntraAdminRole, AccountDisplayName
+| where AccountDisplayName != ""
+| sort by EntraAdminRole asc, Timestamp desc
