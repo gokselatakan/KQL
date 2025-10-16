@@ -1,0 +1,12 @@
+let CriticalIdentities =
+ExposureGraphNodes
+| where set_has_element(Categories, "identity")
+| where isnotnull(NodeProperties.rawData.criticalityLevel) 
+and NodeProperties.rawData.criticalityLevel.criticalityLevel < 4
+| extend AccountID = tostring(NodeProperties.rawData.accountObjectId)
+| distinct AccountID;
+CloudAppEvents
+| where ActivityType == "Add"
+| where ActionType == @"Consent to application."
+| where AccountId has_any(CriticalIdentities)
+| order by Timestamp desc
