@@ -1,0 +1,25 @@
+let ip = "x.x.x.x"; // Sample Malicious IP
+search in (AADSignInEventsBeta, AADSignInEventsBeta, CloudAppEvents, IdentityLogonEvents, CloudAuditEvents, UrlClickEvents, DeviceNetworkInfo, CloudAuditEvents, DeviceFileEvents, AlertEvidence, ExposureGraphNodes, BehaviorEntities, DeviceEvents, DeviceLogonEvents, DeviceNetworkEvents, EmailEvents, DeviceInfo)
+Timestamp between (ago(1d) .. now())
+and (
+// AADSignInEventsBeta AADSpnSignInEventsBeta CloudAppEvents IdentityLogonEvents
+// UrlClickEvents DeviceNetworkInfo CloudAuditEvents
+IPAddress == ip
+// DeviceFileEvents
+or RequestSourceIP == ip
+// AlertEvidence BehaviorEntities DeviceEvents DeviceLogonEvents DeviceNetworkEvents
+or RemoteIP == ip
+// DeviceEvents DeviceFileEvents
+or FileOriginIP == ip
+// EmailEvents
+or SenderIPv4 == ip
+// IdentityLogonEvents
+or DestinationIPAddress == ip
+// DeviceInfo
+or PublicIP == ip
+// AlertEvidence BehaviorEntities DeviceEvents DeviceNetworkEvents
+or LocalIP == ip
+// ExposureGraphNodes
+or NodeProperties.rawData.publicIP == ip
+) 
+| order by Timestamp desc
