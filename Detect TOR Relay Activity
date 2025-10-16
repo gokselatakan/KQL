@@ -1,0 +1,10 @@
+let TorRelayData = (
+    externaldata (Nickname:string,Fingerprint:string,EntryAddress:string,IPAddress:string,Port:string,AddressType:string,Hostname:string,CountryCode:string,IsRunning:bool,LastChangedIPData:string)
+    [h@'https://torinfo.blob.core.windows.net/public/TorRelayIPs.csv'] with (ignoreFirstRecord=true,format="csv")
+    | where AddressType == "IPv4"
+);
+TorRelayData
+| join kind=inner DeviceNetworkEvents on $left.IPAddress == $right.RemoteIP
+| join kind=inner (DeviceInfo | distinct DeviceId, PublicIP) on DeviceId
+| project Timestamp, DeviceId, LocalPublicIP = PublicIP, LocalIP, RemoteIP, TorIP = IPAddress, Hostname, CountryCode, ActionType, InitiatingProcessFileName, InitiatingProcessFolderPath
+| order by Timestamp desc
