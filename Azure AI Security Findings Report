@@ -1,0 +1,8 @@
+ExposureGraphEdges 
+| where TargetNodeCategories[0] == "AI"
+| where SourceNodeCategories[1] == "security_finding"
+| extend FindingDateRaw = parse_json(EdgeProperties)["rawData"]["publishedDate"]
+| extend FindingDate = todatetime(FindingDateRaw)
+| extend SecurityRiskLevel = parse_json(EdgeProperties)["rawData"]["risk"]["riskLevel"]
+| project FindingDate, TargetNodeName, SourceNodeName
+| sort by FindingDate desc
