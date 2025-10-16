@@ -1,0 +1,11 @@
+AADSignInEventsBeta
+// Filter only successful sign-ins
+| where Timestamp > ago(30d)
+| where ErrorCode == 0
+| where EndpointCall == "Cmsi:Cmsi"
+// Filter on unmanaged devices
+| where isempty(AadDeviceId)
+// Optionally filter only on sign-ins with a risklevel assiciated with the sign-in
+//| where RiskLevelDuringSignIn in(10, 50, 100)
+| project-reorder Timestamp, AccountUpn, EndpointCall, IPAddress, ErrorCode, RiskLevelDuringSignIn, Application, ApplicationId, Country, IPAddress
+| order by Timestamp desc
