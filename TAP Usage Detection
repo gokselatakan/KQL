@@ -1,0 +1,5 @@
+AuditLogs
+| where Result == "success"
+| where ResultDescription has "temporary access pass"
+| project TimeGenerated, ResultDescription, OperationName, Identity, InitiatedBy, TargetResources
+| order by TimeGenerated desc
