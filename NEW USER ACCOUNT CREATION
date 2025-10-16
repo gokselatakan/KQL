@@ -1,0 +1,8 @@
+CloudAppEvents
+| where Timestamp > ago(5d)
+| where ActionType == "Add user."
+| where RawEventData.ResultStatus == "Success"
+| mv-expand Property = RawEventData.ModifiedProperties
+| where Property.Name == "AccountEnabled" and Property.NewValue has "true"
+| project Timestamp, AccountObjectId, AccountDisplayName, newGuestAccount = RawEventData.ObjectId, UserAgent
+| order by Timestamp desc
