@@ -1,0 +1,11 @@
+let lookback = 10d;
+SecurityIncident
+| where TimeGenerated >= ago(lookback)
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| extend ResponderRaw = coalesce(tostring(Owner.assignedTo), tostring(Owner.userPrincipalName))
+| where isnotempty(ResponderRaw) and ResponderRaw !in~ ("Unassigned")
+| extend Responder = iff(ResponderRaw has "@", tostring(split(ResponderRaw, "@")[0]), ResponderRaw)
+| where Status == "Closed"
+| summarize ClosedIncidents = count() by Responder
+| order by ClosedIncidents desc
+| project Responder, ClosedIncidents
