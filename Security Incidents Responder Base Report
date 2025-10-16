@@ -1,0 +1,10 @@
+let lookback = 30d;
+SecurityIncident
+| where TimeGenerated >= ago(lookback)
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| where Status == "Closed" and isnotempty(ClosedTime)
+| extend Responder = coalesce(tostring(Owner.assignedTo), tostring(Owner.userPrincipalName))
+| where isnotempty(Responder) and Responder !in~ ("Unassigned")
+| summarize ClosedIncidents = dcount(IncidentNumber)
+  by Responder, Title
+| order by Responder asc, ClosedIncidents desc
