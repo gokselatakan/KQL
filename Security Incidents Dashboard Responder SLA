@@ -1,0 +1,33 @@
+let lookback = 30d;
+SecurityIncident
+| where TimeGenerated >= ago(lookback)
+| extend ProductName = tostring(parse_json(tostring(AdditionalData.alertProductNames))[0])
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| extend Responder = coalesce(tostring(Owner.assignedTo), tostring(Owner.userPrincipalName))
+| where isnotempty(Responder) and Responder !in ("Unassigned")  // sadece atanmış sahipler
+| extend IncidentDuration = iif(Status == "Closed",
+                                datetime_diff('minute', ClosedTime, CreatedTime),
+                                datetime_diff('minute', now(), CreatedTime))
+| extend AlertsRaw = tostring(AlertIds)
+| mv-expand AlertIds = todynamic(AlertsRaw) to typeof(string)
+| join kind=leftouter (
+    SecurityAlert
+    | summarize AlertCount = count() by AlertSeverity, SystemAlertId, AlertName, Status
+) on $left.AlertIds == $right.SystemAlertId
+| summarize
+    Alert_Count = sum(AlertCount),
+    set_AlertName = make_set(AlertName)
+  by IncidentNumber, Title, Severity, Status, IncidentDuration, ProviderName, TimeGenerated, ProductName, Responder
+| extend FirstAlertName = tostring(set_AlertName[0])
+| summarize
+    TotalIncidents = count(),
+    ClosedIncidents = countif(Status == "Closed"),
+    ActiveIncidents = countif(Status == "Active"),
+    NewIncidents = countif(Status == "New"),
+    AvgIncidentDuration_min = round(avg(IncidentDuration), 2),
+    MaxIncidentDuration_min = max(IncidentDuration),
+    MinIncidentDuration_min = min(IncidentDuration),
+    ExampleAlert = any(FirstAlertName)
+  by Responder, Title, ProductName, ProviderName
+| extend ClosedPct = round(100.0 * todouble(ClosedIncidents) / todouble(TotalIncidents), 1)
+| order by Responder asc, TotalIncidents desc
